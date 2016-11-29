@@ -1,0 +1,74 @@
+.sortingSquares{
+	stroke:white;
+	cursor: pointer;
+	&:hover{
+		fill:black !important;
+	}
+}
+.sortingSquares-button{
+	display:inline-block;
+	vertical-align: top;
+	margin-left: 20px;
+	color:$gray;
+	cursor:pointer;
+	&:hover{
+		color:black;
+	}
+	&.selected{
+		color:black;
+	}
+}
+.sortingSquares-button-label{
+	display:inline-block;
+	vertical-align: top;
+	font-weight: 300;
+}
+.back-labels{
+	font-size: $font-size-sm;
+}		
+.chart-holder{
+    position:relative;
+    .sorter-nested-legend{
+        width:100px;
+        right:0;
+        top:30px;
+        position:absolute;
+        
+        .sorter-legend-square{
+        	width: 12px;
+        	height: 12px;
+        	display: inline-block;
+        	margin-bottom: -1px;
+        }
+        .sorter-legend-text{
+        	display: inline-block;
+        	vertical-align: top;
+        	width:calc(100% - 20px);
+        	margin: 4px 0px 0px 3px;
+        	font-size: $font-size-sm;
+        	line-height: 1.2;
+        }
+    }
+    .sorter-nested-chart{
+     	left:0;
+    	top:0;
+    	width:calc(100% - 100px);
+    }
+    @include media-breakpoint-down(sm){
+        .sorter-nested-legend{
+            width:100%;
+            position:static;            
+            .sorter-legend-item{
+                float:left;
+                margin-right: 15px;
+            }
+            .sorter-legend-size{
+                clear:both;
+            }
+        }
+        .sorter-nested-chart{
+        	width:100%;
+        }
+    }          
+    
+}

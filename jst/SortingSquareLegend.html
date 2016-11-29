@@ -1,0 +1,32 @@
+<div class="chart-nav">
+	<div class="navContainer">
+        <div class="btn-group nav-options horizontal" data-toggle="buttons">
+            <%t.self.buttonColumns.forEach(function(d,i){%>
+                <label dataid="<%= d %>" class="btn btn-primary <%if(d == t.self.initialSort){%>active<%}%> smaller">
+                    <input type="radio" name="nav-options" autocomplete="off"> 
+                    <%=t.self.buttonText[i]%>
+                </label>
+            <%})%>
+        </div>    		    		
+	</div>    	
+</div>
+
+
+<div class="chart-holder">
+    <%if (t.self.colorField){%>
+    	<div class="sorter-nested-legend">
+            <%t.self.colorDomain.forEach(function(d,i){%>
+                <div class ="sorter-legend-item">
+                	<div class = "sorter-legend-square " style="background-color:<%=t.self.colorRange[i]%>;"></div>
+                	<p class = "sorter-legend-text"><%=d%></p>
+                </div>
+            <%})%>        
+    	</div>
+        <div class="sorter-nested-chart" id="<%=t.self.targetDiv%>Chart"></div>
+    <%}else{%>
+        <div class="" id="<%=t.self.targetDiv%>Chart"></div>
+    <%}%>
+</div>
+
+
+
