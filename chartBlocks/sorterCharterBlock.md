@@ -11,8 +11,8 @@
 			colorRange:[rose4,tangerine2,tangerine4],
 			maxAcross:10,
 			boxSize:25,
-//			legendtemplate:Reuters.Template.SortingSquareLegend,
-//			tooltipTemplate:Reuters.Template.SortingSquaresTooltip,
+//			legendtemplate:Reuters.Graphics.Template.SortingSquareLegend,
+//			tooltipTemplate:Reuters.Graphics.Template.SortingSquaresTooltip,
 //			margin:{left:1, top:35, right:1, bottom:0},
 //			idField:"name",
 		});  
