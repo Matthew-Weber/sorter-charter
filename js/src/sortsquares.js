@@ -84,7 +84,7 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 	},
 	setPositions: function(category){
 		var self = this;
-
+        self.trigger("setPositions:start")
 		self.data.sort(function(a,b){
 			var counts = _.countBy(self.data, self.category)
 			if (counts[a[self.category]] > counts[b[self.category]]){ return -1}
@@ -185,10 +185,12 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 			self.height = highest+self.boxSize;
 			self.totalHeightObj[category] = self.height;						
 		}
+        self.trigger("setPositions:end")
 
 	},
 	render: function() {
 		var self = this;
+        self.trigger("renderChart:start")
 
 		self.buttonColumns.forEach(function(d){
 			self.setPositions(d)			
@@ -266,11 +268,13 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 			self.category = $(this).attr("dataid")			
 			self.update()
 		})
+        self.trigger("renderChart:end")
 		
 
 	},
 	update: function(){
 		var self = this;
+        self.trigger("update:start")
 
 		self.buttonColumns.forEach(function(d){
 			self.setPositions(d)			
@@ -339,6 +343,7 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 			.duration(1000)
 			.style("opacity",0)
 			.remove()
+        self.trigger("update:end")
 		
 	},
 

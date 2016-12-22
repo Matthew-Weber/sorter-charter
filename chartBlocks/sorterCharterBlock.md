@@ -1,6 +1,6 @@
 
  		Reuters.Graphics.sortingGraphic = new Reuters.Graphics.SortingSquares({
-			el: "#reuters-sortingsquares",
+			el: "#reutersGraphic-chart1",
 			//dataURL: '//d3sl9l9bcxfb5q.cloudfront.net/json/mo-egypt-judges-amada',
 			dataURL:"data/data.csv",
  			buttonColumns:["terrorism","sentencegroup","type"],
@@ -16,3 +16,28 @@
 //			margin:{left:1, top:35, right:1, bottom:0},
 //			idField:"name",
 		});  
+
+Reuters.Graphics.sortingGraphic.on("renderChart:start", function(evt){
+    var self = this;
+    
+})		
+Reuters.Graphics.sortingGraphic.on("renderChart:end", function(evt){
+    var self = this;
+    
+})		
+Reuters.Graphics.sortingGraphic.on("update:start", function(evt){
+    var self = this;
+    
+})		
+Reuters.Graphics.sortingGraphic.on("update:end", function(evt){
+    var self = this;
+    
+})		
+Reuters.Graphics.sortingGraphic.on("setPositions:start", function(evt){
+    var self = this;
+    
+})		
+Reuters.Graphics.sortingGraphic.on("setPositions:end", function(evt){
+    var self = this;
+    
+})			
