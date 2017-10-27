@@ -44,6 +44,19 @@
   window["Reuters"]["Graphics"]["sorterCharter"] = window["Reuters"]["Graphics"]["sorterCharter"] || {};
   window["Reuters"]["Graphics"]["sorterCharter"]["Template"] = window["Reuters"]["Graphics"]["sorterCharter"]["Template"] || {};
 
+  window["Reuters"]["Graphics"]["sorterCharter"]["Template"]["SortingSquaresLabel"] = function (t) {
+    var __t,
+        __p = '';
+    __p += ((__t = t.data.name) == null ? '' : __t) + ' (' + ((__t = t.data.length) == null ? '' : __t) + ')';
+    return __p;
+  };
+})();
+(function () {
+  window["Reuters"] = window["Reuters"] || {};
+  window["Reuters"]["Graphics"] = window["Reuters"]["Graphics"] || {};
+  window["Reuters"]["Graphics"]["sorterCharter"] = window["Reuters"]["Graphics"]["sorterCharter"] || {};
+  window["Reuters"]["Graphics"]["sorterCharter"]["Template"] = window["Reuters"]["Graphics"]["sorterCharter"]["Template"] || {};
+
   window["Reuters"]["Graphics"]["sorterCharter"]["Template"]["SortingSquaresTooltip"] = function (t) {
     var __t,
         __p = '',
@@ -68,6 +81,7 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 	dataURL: undefined,
 	legendtemplate: Reuters.Graphics.sorterCharter.Template.SortingSquareLegend,
 	tooltipTemplate: Reuters.Graphics.sorterCharter.Template.SortingSquaresTooltip,
+	labelTemplate: Reuters.Graphics.sorterCharter.Template.SortingSquaresLabel,
 	idField: "id",
 	colorRange: [blue2, blue3, blue4, blue5],
 	maxAcross: 3,
@@ -82,7 +96,9 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 		_.each(opts, function (item, key) {
 			self[key] = item;
 		});
-
+		if (!self.labelGap) {
+			self.labelGap = self.boxSize;
+		}
 		if (!self.options.maxAcross) {
 			self.options.maxAcross = self.maxAcross;
 		}
@@ -143,9 +159,8 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 
 		self.render();
 	},
-	setPositions: function setPositions(category) {
+	sortData: function sortData() {
 		var self = this;
-		self.trigger("setPositions:start");
 		self.data.sort(function (a, b) {
 			var counts = _.countBy(self.data, self.category);
 			if (counts[a[self.category]] > counts[b[self.category]]) {
@@ -164,6 +179,13 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 			}
 			return 0;
 		});
+	},
+
+	setPositions: function setPositions(category) {
+		var self = this;
+		self.trigger("setPositions:start");
+
+		self.sortData();
 
 		if ($(window).width() < 600) {
 			self.maxAcross = 1;
@@ -171,91 +193,79 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 			self.maxAcross = self.options.maxAcross;
 		}
 
-		var nest = d3.nest().key(function (d) {
+		self.nest = d3.nest().key(function (d) {
 			return d[category];
 		}).map(self.data);
 
-		var keys = d3.keys(nest);
+		self.keys = d3.keys(self.nest);
 
-		self.categoryLength = keys.length;
+		self.categoryLength = self.keys.length;
 
-		self.sectionLength = self.width / self.categoryLength;
-		self.boxesPerRow = Math.floor(self.sectionLength / self.boxSize) - 1;
 		self.labels = [];
 
-		if (self.categoryLength > self.maxAcross) {
-			self.sectionLength = self.width / self.maxAcross;
-			self.boxesPerRow = Math.floor(self.sectionLength / self.boxSize) - 1;
-			self.rows = Math.ceil(self.categoryLength / self.maxAcross);
+		self.sectionLength = self.width / self.maxAcross;
+		self.boxesPerRow = Math.floor(self.sectionLength / self.boxSize) - 1;
+		self.rows = Math.ceil(self.categoryLength / self.maxAcross);
+
+		self.height = 0;
+
+		var sectionHeightObject = {};
+		self.keys.forEach(function (item, index) {
+			var rowadjuster = Math.floor(index / self.maxAcross);
+			sectionHeightObject[rowadjuster] = sectionHeightObject[rowadjuster] || [];
+			sectionHeightObject[rowadjuster].push(item);
+		});
+
+		self.keys.forEach(function (item, index) {
+
+			var columnadjuster = Math.floor(index % self.maxAcross);
+			var rowadjuster = Math.floor(index / self.maxAcross);
 
 			var longest = 0;
-
-			_.each(nest, function (d, key) {
-				if (d.length > longest) {
-					longest = d.length;
+			sectionHeightObject[rowadjuster].forEach(function (catName) {
+				if (self.nest[catName].length > longest) {
+					longest = self.nest[catName].length;
 				}
 			});
 
 			var depth = Math.ceil(longest / self.boxesPerRow);
-			var sectionHeight = depth * self.boxSize + self.boxSize * 2;
-			self.height = sectionHeight * self.rows;
+			var sectionHeight = depth * self.boxSize + self.labelGap;
 
-			keys.forEach(function (item, index) {
-				var columnadjuster = Math.floor(index % self.maxAcross);
-				var rowadjuster = Math.floor(index / self.maxAcross);
-				var obj = {
-					name: item + " (" + nest[item].length + ")"
-				};
-				nest[item].forEach(function (d, i) {
-					d.smallpositionX = Math.floor(i % self.boxesPerRow) * self.boxSize;
-					d.smallpositionY = Math.floor(i / self.boxesPerRow) * self.boxSize;
-					d.masterpositionX = self.width * columnadjuster / self.maxAcross;
-					d.masterpositionY = self.height * rowadjuster / self.rows;
-					d.x = Math.floor(i % self.boxesPerRow) * self.boxSize + self.width * columnadjuster / self.maxAcross;
-					d.y = Math.floor(i / self.boxesPerRow) * self.boxSize + self.height * rowadjuster / self.rows;
-					obj.x = self.width * columnadjuster / self.maxAcross;
-					obj.y = self.height * rowadjuster / self.rows - self.boxSize / 2;
-				});
-				self.labels.push(obj);
-			});
+			if (self.maxAcross == 1) {
+				var numberOfItems = self.nest[item].length;
+				var numberOfRows = Math.ceil(numberOfItems / self.boxesPerRow);
+				sectionHeight = numberOfRows * self.boxSize;
+			}
 
-			var highest = 0;
-			self.data.forEach(function (d) {
-				if (d.y > highest) {
-					highest = d.y;
+			var obj = {
+				name: item,
+				length: self.nest[item].length,
+				width: self.boxesPerRow * self.boxSize
+			};
+
+			self.nest[item].forEach(function (d, i) {
+				d.x = Math.floor(i % self.boxesPerRow) * self.boxSize + self.width * columnadjuster / self.maxAcross;
+				d.y = Math.floor(i / self.boxesPerRow) * self.boxSize + self.height;
+				obj.x = self.width * columnadjuster / self.maxAcross;
+				obj.y = self.height - self.labelGap;
+				if (self.maxAcross == 1) {
+					d.y = Math.floor(i / self.boxesPerRow) * self.boxSize + self.height + self.labelGap;
+					obj.y = self.height;
 				}
 			});
-			self.height = highest + self.boxSize;
-			self.totalHeightObj[category] = self.height;
-		} else {
+			self.labels.push(obj);
 
-			keys.forEach(function (item, index) {
-				var obj = {
-					name: item + " (" + nest[item].length + ")"
-				};
-
-				nest[item].forEach(function (d, i) {
-					d.smallpositionX = Math.floor(i % self.boxesPerRow) * self.boxSize;
-					d.smallpositionY = Math.floor(i / self.boxesPerRow) * self.boxSize;
-					d.masterpositionX = self.width * index / self.categoryLength;
-					d.masterpositionY = 0;
-					d.x = Math.floor(i % self.boxesPerRow) * self.boxSize + self.width * index / self.categoryLength;
-					d.y = Math.floor(i / self.boxesPerRow) * self.boxSize;
-					obj.x = self.width * index / self.categoryLength;
-					obj.y = 0 - self.boxSize / 2;
-				});
-				self.labels.push(obj);
-			});
-
-			var highest = 0;
-			self.data.forEach(function (d) {
-				if (d.y > highest) {
-					highest = d.y;
+			if (self.maxAcross == 1) {
+				self.height += sectionHeight + self.boxSize / 2 + self.labelGap;
+			} else {
+				if ((index + 1) / self.maxAcross % 1 == 0) {
+					self.height += sectionHeight + self.labelGap;
 				}
-			});
-			self.height = highest + self.boxSize;
-			self.totalHeightObj[category] = self.height;
-		}
+			}
+		});
+
+		self.totalHeightObj[category] = self.height + self.boxSize * 2;
+
 		self.trigger("setPositions:end");
 	},
 	render: function render() {
@@ -277,14 +287,16 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 
 		self.svg = d3.select(self.chartId).append("svg").attr("width", self.width + self.margin.left + self.margin.right).attr("height", self.masterHeight + self.margin.top + self.margin.top).append("g").attr("transform", "translate(" + self.margin.left + "," + self.margin.top + ")");
 
-		self.labels = self.svg.selectAll(".back-labels").data(self.labels, function (d) {
+		self.labels = d3.select(self.chartId).selectAll(".back-labels").data(self.labels, function (d) {
 			return d.name;
-		}).enter().append("text").attr("x", function (d) {
-			return d.x;
-		}).attr("y", function (d) {
-			return d.y;
-		}).text(function (d) {
-			return d.name;
+		}).enter().append("div").style("left", function (d) {
+			return d.x + self.margin.left + "px";
+		}).style("top", function (d) {
+			return d.y + self.margin.top + "px";
+		}).style("width", function (d) {
+			return d.width + "px";
+		}).html(function (d) {
+			return self.labelTemplate({ data: d });
 		}).attr("class", "back-labels");
 
 		self.addRects = self.svg.selectAll("rect").data(self.data, function (d) {
@@ -345,25 +357,29 @@ Reuters.Graphics.SortingSquares = Backbone.View.extend({
 			return d.y;
 		});
 
-		self.svg.selectAll(".back-labels").data(self.labels, function (d) {
+		d3.select(self.chartId).selectAll(".back-labels").data(self.labels, function (d) {
 			return d.name;
-		}).enter().append('text').attr("x", function (d) {
-			return d.x;
-		}).attr("y", function (d) {
-			return d.y;
-		}).text(function (d) {
-			return d.name;
+		}).enter().append("div").style("left", function (d) {
+			return d.x + self.margin.left + "px";
+		}).style("top", function (d) {
+			return d.y + self.margin.top + "px";
+		}).style("width", function (d) {
+			return d.width + "px";
+		}).html(function (d) {
+			return self.labelTemplate({ data: d });
 		}).attr("class", "back-labels").style("opacity", 0);
 
-		self.svg.selectAll(".back-labels").transition().duration(1000).attr("x", function (d) {
-			return d.x;
-		}).attr("y", function (d) {
-			return d.y;
-		}).text(function (d) {
-			return d.name;
+		d3.select(self.chartId).selectAll(".back-labels").html(function (d) {
+			return self.labelTemplate({ data: d });
+		}).transition().duration(1000).style("left", function (d) {
+			return d.x + self.margin.left + "px";
+		}).style("top", function (d) {
+			return d.y + self.margin.top + "px";
+		}).style("width", function (d) {
+			return d.width + "px";
 		}).style("opacity", 1);
 
-		self.svg.selectAll(".back-labels").data(self.labels, function (d) {
+		d3.select(self.chartId).selectAll(".back-labels").data(self.labels, function (d) {
 			return d.name;
 		}).exit().transition().duration(1000).style("opacity", 0).remove();
 		self.trigger("update:end");

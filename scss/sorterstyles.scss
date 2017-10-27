@@ -25,6 +25,7 @@
 }
 .back-labels{
 	font-size: $font-size-sm;
+	position:absolute;
 }		
 .chart-holder{
     position:relative;
@@ -33,6 +34,7 @@
         right:0;
         top:30px;
         position:absolute;
+        
         
         .sorter-legend-square{
         	width: 12px;
@@ -50,20 +52,23 @@
         }
     }
     .sorter-nested-chart{
-     	left:0;
-    	top:0;
+		position:relative;
     	width:calc(100% - 100px);
     }
     @include media-breakpoint-down(sm){
         .sorter-nested-legend{
             width:100%;
-            position:static;            
+            position:static;
+			display:flex;
+			flex-wrap: wrap-reverse;
+			
+                        
             .sorter-legend-item{
-                float:left;
+
                 margin-right: 15px;
             }
-            .sorter-legend-size{
-                clear:both;
+            .sorter-legend-text{
+				width:auto;
             }
         }
         .sorter-nested-chart{
